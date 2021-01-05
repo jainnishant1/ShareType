@@ -1,0 +1,3 @@
+# ShareType
+
+Online Text Editor
