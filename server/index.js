@@ -5,8 +5,11 @@ const keys = require('./config/keys')
 const passport = require('passport')
 const LocalStrategy = require('passport-local')
 const User = require('./models/schema')
+const cors = require('cors')
 
 const app = express()
+
+app.use(cors())
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
@@ -46,9 +49,10 @@ passport.use(new LocalStrategy(
 }))
 
 app.post('/register',(req,res)=>{
-    // res.send(`User: ${req.body.username}\nPassword: ${req.body.password}`)
+    
     const username = req.body.username
     const password = req.body.password
+    
     if(username==''||password==''){
         return res.json({success:false,error:"please fill in all the details"})
     }
@@ -80,6 +84,6 @@ app.post('/login', passport.authenticate('local'), (req, res) => {
 
 
 
-app.listen(3000, () => {
-    console.log("server running at 3000")
+app.listen(5000, () => {
+    console.log("server running at 5000")
 })
