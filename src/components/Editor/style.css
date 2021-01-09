@@ -1,0 +1,21 @@
+
+* {
+  --editor-red: #FF4136;
+  --editor-orange: #FF851B;
+  --editor-yellow: #FFDC00;
+  --editor-green: #2ECC40;
+  --editor-blue: #0074D9;
+  --editor-purple: #A052FF;
+  --editor-black: #646464;
+  --editor-gray: #ccc;
+  --editor-white: #f2f2f2;
+}
+
+body {
+  font-family: sans-serif;
+  color: #646464;
+}
+
+h1, p {
+  font-family: Lato;
+}

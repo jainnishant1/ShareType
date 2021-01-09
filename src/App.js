@@ -1,7 +1,7 @@
 import './App.css';
 import Login from './components/Login'
 import Register from './components/Register'
-import Editor from './components/Editor'
+import Editor from './components/Editor/Editor'
 import { useState } from 'react'
 
 const App = () => {
@@ -21,8 +21,8 @@ const App = () => {
 
   return (
     <div className="App">
-      {page == "Login" ? <Login toLogin={updateToLogin} toRegister={updateToRegister} toEditor={updateToEditor}/> : null}
-      {page == "Register" ? <Register toLogin={updateToLogin} toRegister={updateToRegister} toEditor={updateToEditor}/> : null}
+      {page == "Login" ? <Login toLogin={updateToLogin} toRegister={updateToRegister} toEditor={updateToEditor} /> : null}
+      {page == "Register" ? <Register toLogin={updateToLogin} toRegister={updateToRegister} toEditor={updateToEditor} /> : null}
       {page == "Editor" ? <Editor /> : null}
     </div>
 
