@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { Editor, EditorState, RichUtils, convertToRaw } from 'draft-js'
 import styled from '@emotion/styled'
 import IconButton from '@material-ui/core/IconButton'
@@ -10,6 +10,7 @@ import FormatItalic from '@material-ui/icons/FormatItalic'
 import FormatTitle from '@material-ui/icons/FormatSize'
 import FormatUnderlined from '@material-ui/icons/FormatUnderlined'
 import FormatColor from '@material-ui/icons/Palette'
+import io from 'socket.io-client'
 const HANDLED = 'handled', NOT_HANDLED = 'not-handled'
 
 function NavButton({ children, onClick }) {
@@ -123,6 +124,16 @@ export default function RichTextEditor(props) {
     const [italicFocus, setItalicFocus] = useState(inactive)
     const [underlineFocus, setUnderlineFocus] = useState(inactive)
 
+    useEffect(() => {
+        const socket = io('http://localhost:5000');
+        socket.on('connect', () => { console.log('ws connect'); });
+        socket.on('disconnect', () => { console.log('ws disconnect'); });
+        socket.emit('msg', 'Does this work?');
+        socket.on('msg', (data) => {
+            console.log('ws msg:', data);
+            socket.emit('cmd', { foo: 123 });
+        });
+    })
 
     const onChange = editorState => {
         setEditorState(editorState)

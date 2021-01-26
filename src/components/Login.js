@@ -69,18 +69,19 @@ const Login = (props) => {
             headers: {
                 'Content-Type': 'application/json; charset=utf-8',
             },
+            credentials:'same-origin',
             mode:'cors',
             body: JSON.stringify({
                 username,
                 password,
             }),
         }).then((response) => {
-            console.log(response)
+            // console.log(response)
             return response.json();
         })
             .then((resp) => {
                 if (resp.success == true) {
-                    props.toEditor();
+                    props.toDoc();
                 } else {
                     setError(true)
                 }
