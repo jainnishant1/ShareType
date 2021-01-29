@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,useRef } from 'react';
 import { useHistory } from 'react-router-dom'
 import { makeStyles } from '@material-ui/core/styles';
 import List from '@material-ui/core/List';
@@ -38,7 +38,8 @@ export default function DocScreen() {
     const [secondary, setSecondary] = React.useState(false);
     
     const [error, setError] = useState(false)
-    const [docs, setDocs] = useState([])
+    const docs = useRef([])
+    const [collDoc,setCollDoc] = useState([])
     const [share, setShare] = useState([])
     const [coll, setColl] = useState(false)
 
@@ -77,14 +78,16 @@ export default function DocScreen() {
                 docList.forEach((singleDoc) => {
                     singleDoc.isOwner = false
                 })
-                let newArray = [...docs,...docList]
+                let newArray = [...docs.current,...docList]
                 let Share = new Array(newArray.length)
                 Share.fill(false)
+                docs.current=newArray
+                setShare(Share)
             } else {
                 setError(true)
             }
         }).catch((err) => {
-            console.log(`Error in retrieveing my owned Documents: ${err}`);
+            console.log(`Error in retrieveing my collabed Documents: ${err}`);
             setError(true)
         });
     }
@@ -110,7 +113,7 @@ export default function DocScreen() {
                 docList.forEach((singleDoc) => {
                     singleDoc.isOwner = true
                 })
-                setDocs(docList)
+                docs.current=docList
                 setShare(newArray)
                 getMyCollabDocs()
             } else {
@@ -176,7 +179,7 @@ export default function DocScreen() {
           </Typography>
                     <div className={classes.demo}>
                         <List dense={dense}>
-                            {docs.map((doc, val) => (
+                            {docs.current.map((doc, val) => (
                                 <>
                                     <ListItem style={{ "margin": "5px 0" }}>
                                         <ListItemText
