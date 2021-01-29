@@ -3,53 +3,46 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const keys = require('./config/keys')
 const passport = require('passport')
-const LocalStrategy = require('passport-local')
-const User = require('./models/schema')
-const Document = require('./models/document')
+const User = require('./models/User')
+const Document = require('./models/Document')
 const cors = require('cors')
+const session = require('express-session');
+const jwt = require('jsonwebtoken')
+const {JWT_SECRET} = require('./config/keys') 
+const requireLogin = require('./middleware/requireLogin')
 
 const app = express()
 const http = require('http').createServer(app)
 const io = require('socket.io')(http)
 
-app.use(cors())
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+//passport config
+require('./config/passport')(passport);
 
-
+//connect to Mongo
 mongoose.connect(keys.MongoURI,
     { useNewUrlParser: true, useUnifiedTopology: true }, (err) => {
         if (err) return console.log(err);
         console.log('Database Connected!!')
     })
 
+app.use(cors())
+app.use(express.json());
+// app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.urlencoded({extended:true}))
+
+app.use(
+    session({
+        secret: 'secret',
+        resave: true,
+        saveUninitialized: true
+    })
+);
+
 app.use(passport.initialize());
 app.use(passport.session());
 
-passport.serializeUser((user, done) => {
-    done(null, user._id);
-});
-passport.deserializeUser((id, done) => {
-    User.findById(id, (err, response) => {
-        done(err, response);
-    });
-});
 
-passport.use(new LocalStrategy(
-    (username, password, done) => {
-        User.findOne({ username: username }, (err, res) => {
-            if (err) return console.log(err);
-            if (!res) {
-                return done(null, false);
-            }
-            if (password != res.password) {
-                return done(null, false);
-            }
-            else {
-                return done(null, res);
-            }
-        })
-    }))
+
 
 io.on('connection', (socket) => {
     console.log('Connected to client!');
@@ -59,7 +52,6 @@ io.on('connection', (socket) => {
         console.log(data);
     });
 });
-
 app.post('/register', (req, res) => {
 
     const username = req.body.username
@@ -91,16 +83,16 @@ app.post('/register', (req, res) => {
 })
 
 app.post('/login', passport.authenticate('local'), (req, res) => {
-    console.log(req.user)
-    res.send({ success: true });
+    const token = jwt.sign({_id:req.user._id},JWT_SECRET)
+    const {_id,username} = req.user
+    res.send({ success: true ,token,user:{_id,username}});
 });
-
-app.get('/logout', (req, res) => {
+app.get('/logout',requireLogin,(req, res) => {
     req.logout();
     res.json({ success: true });
 });
 
-app.post('/createDocument',(req,res)=>{
+app.post('/createDocument',requireLogin,(req,res)=>{
     if(!req.user){
         return console.log("User Must be logged in");
     }
@@ -122,7 +114,7 @@ app.post('/createDocument',(req,res)=>{
     })
 })
 
-app.get('/myOwnedDocs',(req,res)=>{
+app.get('/myOwnedDocs',requireLogin,(req,res)=>{
     if (!req.user) {
         return console.log("User Must be logged in");
     }
@@ -137,7 +129,7 @@ app.get('/myOwnedDocs',(req,res)=>{
     })
 })
 
-app.get('/myCollabDocs',(req,res)=>{
+app.get('/myCollabDocs',requireLogin,(req,res)=>{
     Document.find((err,Doc)=>{
         if (err) {
             return res.json({ success: false, error: err })
@@ -152,7 +144,7 @@ app.get('/myCollabDocs',(req,res)=>{
     })
 })
 
-app.post('/collaborate',(req,res)=>{
+app.post('/collaborate',requireLogin,(req,res)=>{
     Document.findById(req.body.id,(err,Doc)=>{
         if(err){
             return res.json({ success: false, error: err })
@@ -169,10 +161,6 @@ app.post('/collaborate',(req,res)=>{
         })
     })
 })
-
-// app.post('/save',(req,res)=>{
-
-// })
 
 
 http.listen(5000, () => {

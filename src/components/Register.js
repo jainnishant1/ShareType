@@ -11,6 +11,7 @@ import Box from '@material-ui/core/Box';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
+import {useHistory} from 'react-router-dom'
 import Container from '@material-ui/core/Container';
 
 function Copyright() {
@@ -48,6 +49,7 @@ const useStyles = makeStyles((theme) => ({
 
 const Register = (props) => {
     const classes = useStyles();
+    const history = useHistory();
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
@@ -84,7 +86,8 @@ const Register = (props) => {
             })
                 .then((resp) => {
                     if (resp.success == true) {
-                        props.toLogin();
+                        // props.toLogin();
+                        history.push('/')
                     } else {
                         setError(true)
                     }
@@ -195,7 +198,7 @@ const Register = (props) => {
           </Button>
                     <Grid container justify="flex-end">
                         <Grid item>
-                            <Link href="#" variant="body2" onClick={props.toLogin}>
+                            <Link href="/" variant="body2" onClick={props.toLogin}>
                                 Already have an account? Sign in
               </Link>
                         </Grid>

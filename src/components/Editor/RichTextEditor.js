@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Editor, EditorState, RichUtils, convertToRaw } from 'draft-js'
+import { useHistory } from 'react-router-dom'
 import styled from '@emotion/styled'
 import IconButton from '@material-ui/core/IconButton'
 import Button from '@material-ui/core/Button'
@@ -11,6 +12,7 @@ import FormatTitle from '@material-ui/icons/FormatSize'
 import FormatUnderlined from '@material-ui/icons/FormatUnderlined'
 import FormatColor from '@material-ui/icons/Palette'
 import io from 'socket.io-client'
+import ExitToAppTwoToneIcon from '@material-ui/icons/ExitToAppTwoTone';
 const HANDLED = 'handled', NOT_HANDLED = 'not-handled'
 
 function NavButton({ children, onClick }) {
@@ -117,6 +119,9 @@ export default function RichTextEditor(props) {
     const inactive = "#646464"
     const [anchorEl, setAnchorEl] = useState(null);
     const [editorState, setEditorState] = useState(EditorState.createEmpty())
+    //added
+    const history = useHistory();
+    const [error, setError] = useState(false)
 
     //For changing color of icons
     const [titleFocus, setTitleFocus] = useState(inactive)
@@ -180,6 +185,34 @@ export default function RichTextEditor(props) {
         setAnchorEl(null);
     }
 
+    const logout = (e) => {
+        e.preventDefault()
+        fetch('http://localhost:5000/logout', {
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8',
+                "Authorization": "Bearer " + localStorage.getItem("jwt")
+            },
+            credentials: 'same-origin',
+            mode: 'cors',
+        }).then((response) => {
+            // console.log(response)
+            return response.json();
+        })
+            .then((resp) => {
+                if (resp.success == true) {
+                    // props.toLogin();
+                    localStorage.clear()
+                    history.push('/')
+                } else {
+                    setError(true)
+                }
+            })
+            .catch((err) => {
+                console.log(`Error in Logging Out: ${err}`);
+                setError(true)
+            });
+    }
+
     const open = Boolean(anchorEl);
     const id = open ? 'simple-popover' : undefined;
 
@@ -201,6 +234,9 @@ export default function RichTextEditor(props) {
             </NavButton>
             <NavDivider />
             <NavButton aria-describedby={id} onClick={handleClick}><FormatColor /></NavButton>
+            <NavButton>
+                <ExitToAppTwoToneIcon onClick={e => { logout(e) }} />
+            </NavButton>
 
             <Popper
                 id={id}

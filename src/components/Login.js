@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import {useHistory } from 'react-router-dom'
 import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -50,6 +51,7 @@ const useStyles = makeStyles((theme) => ({
 
 const Login = (props) => {
     const classes = useStyles();
+    const history = useHistory()
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
     const [error, setError] = useState(false)
@@ -81,7 +83,9 @@ const Login = (props) => {
         })
             .then((resp) => {
                 if (resp.success == true) {
-                    props.toDoc();
+                    localStorage.setItem("user", JSON.stringify(resp.user))
+                    localStorage.setItem("jwt", resp.token)
+                    history.push('/docScreen')
                 } else {
                     setError(true)
                 }
@@ -161,7 +165,7 @@ const Login = (props) => {
               </Link>
                         </Grid>
                         <Grid item>
-                            <Link href="#" variant="body2" onClick={props.toRegister}>
+                            <Link href="/register" variant="body2" >
                                 {"Don't have an account? Sign Up"}
                             </Link>
                         </Grid>
