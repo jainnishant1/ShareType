@@ -4,12 +4,16 @@ import { makeStyles } from '@material-ui/core/styles';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
+import IconButton from '@material-ui/core/IconButton';
+import DeleteIcon from '@material-ui/icons/Delete';
 import ListItemText from '@material-ui/core/ListItemText';
 import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
 import CollabForm from './CollabForm'
 import Button from '@material-ui/core/Button'
 import Divider from '@material-ui/core/Divider';
+import NewDocForm from './NewDocForm'
+import RefreshIcon from '@material-ui/icons/Refresh';
 import Box from '@material-ui/core/Box';
 import TextField from '@material-ui/core/TextField';
 
@@ -18,6 +22,7 @@ const useStyles = makeStyles((theme) => ({
         flexGrow: 1,
         width: '100%',
         alignItems: 'center',
+        marginLeft:"2px"
     },
     demo: {
         width: '100%',
@@ -39,9 +44,9 @@ export default function DocScreen() {
     
     const [error, setError] = useState(false)
     const docs = useRef([])
-    const [collDoc,setCollDoc] = useState([])
     const [share, setShare] = useState([])
     const [coll, setColl] = useState(false)
+    const [newDoc,setNewDoc] = useState(false)
 
     
 
@@ -59,6 +64,10 @@ export default function DocScreen() {
     const collabToggler = (e) => {
         e.preventDefault()
         setColl(!coll)
+    }
+
+    const newDocToggler = ()=>{
+        setNewDoc(!newDoc)
     }
 
     const getMyCollabDocs = () => {
@@ -125,9 +134,36 @@ export default function DocScreen() {
         });
     }
 
-    const openNewDoc = (e)=>{
+    const deleteDocument = (e,id)=>{
         e.preventDefault()
-        history.push('/editor')
+        fetch('http://localhost:5000/deleteDocument', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8',
+                "Authorization": "Bearer " + localStorage.getItem("jwt")
+            },
+            credentials: 'same-origin',
+            mode: 'cors',
+            body: JSON.stringify({
+                id,
+            }),
+        }).then((response) => {
+            // console.log(response)
+            return response.json();
+        }).then((resp) => {
+            if (resp.success == true) {
+                getMyOwnedDocs()
+            } else {
+                setError(true)
+            }
+        }).catch((err) => {
+            console.log(`Error in deleting: ${err}`);
+            setError(true)
+        });
+    }
+    const deleteCollabDocument = (e)=>{
+        e.preventDefault()
+        console.warn("collab")
     }
 
     const logout = (e) => {
@@ -175,7 +211,7 @@ export default function DocScreen() {
             <Grid style={{ "width": "100%", "alignItems": "center" }}>
                 <Grid item xs={20} md={10}>
                     <Typography variant="h6" className={classes.title}>
-                        My Documents
+                        <b>My Documents</b> <RefreshIcon style={{"fontSize":"medium"}} onClick={getMyOwnedDocs}/>
           </Typography>
                     <div className={classes.demo}>
                         <List dense={dense}>
@@ -184,7 +220,7 @@ export default function DocScreen() {
                                     <ListItem style={{ "margin": "5px 0" }}>
                                         <ListItemText
                                             secondary={secondary ? 'Secondary text' : null}
-                                        >{doc.title}</ListItemText>
+                                            style={{ "width": "5px" }}>{doc.title}</ListItemText>
                                         <ListItemText
                                             secondary={secondary ? 'Secondary text' : null}
                                         >{doc.isOwner ? <>Owner</> : <>Collaborator</>}</ListItemText>
@@ -192,15 +228,18 @@ export default function DocScreen() {
                                             <Button
                                                 type="submit"
                                                 variant="contained"
-                                                style={{ "marginRight": "4px", "maxHeight": "30px", "maxWidth": "10px" }}
+                                                style={{ "marginRight": "6px", "maxHeight": "30px", "maxWidth": "10px" }}
                                                 onClick={(e) => { shareToggler(e, val) }}
                                             >Share</Button>
                                             <Button
                                                 type="submit"
                                                 variant="contained"
                                                 color="primary"
-                                                style={{ "marginRight": "4px", "maxHeight": "30px", "maxWidth": "10px" }}
+                                                style={{ "marginRight": "2px", "maxHeight": "30px", "maxWidth": "10px" }}
                                             >Edit</Button>
+                                            <IconButton edge="end" aria-label="delete">
+                                                {doc.isOwner ? <DeleteIcon onClick={e => { deleteDocument(e,doc._id) }} /> : <DeleteIcon />}
+                                            </IconButton>
                                         </ListItemSecondaryAction>
                                     </ListItem>
                                     {share[val] ?
@@ -217,6 +256,10 @@ export default function DocScreen() {
                                     <Divider />
                                 </>
                             ))}
+                            {newDoc?
+                            <NewDocForm toggle={(e)=>{newDocToggler(e)}} refresh={getMyOwnedDocs}/>
+                            :
+                            <div>
                             {coll ?
                                 <CollabForm toogle={(e) => { collabToggler(e) }}/>
                                 :
@@ -225,7 +268,7 @@ export default function DocScreen() {
                                     type="submit"
                                     variant="contained"
                                     style={{ "marginRight": "4px", "maxHeight": "30px", "width": "105px", "marginTop": "14px" }}
-                                        onClick={(e) => { openNewDoc(e) }}
+                                                onClick={(e) => { newDocToggler(e) }}
                                 >New</Button>
                                 <Button
                                     type="submit"
@@ -235,6 +278,8 @@ export default function DocScreen() {
                                     onClick={(e) => { collabToggler(e) }}
                                 >Collaborte</Button>
                             </Grid>}
+                            </div>
+                            }
                         </List>
                     </div>
 

@@ -98,7 +98,6 @@ app.post('/createDocument',requireLogin,(req,res)=>{
     }
     const newDocument = new Document({
         owner: req.user._id,
-        password: req.body.password,
         title: req.body.title,
         createdAt: new Date(),
         editedAt: new Date()
@@ -159,6 +158,17 @@ app.post('/collaborate',requireLogin,(req,res)=>{
                 return res.json({ success: true })
             }
         })
+    })
+})
+
+app.post('/deleteDocument',requireLogin,(req,res)=>{
+    Document.findByIdAndDelete(req.body.id,(err,Doc)=>{
+        if (err) {
+            return res.json({ success: false, error: err })
+        }
+        else{
+            return res.json({ success: true })
+        }
     })
 })
 

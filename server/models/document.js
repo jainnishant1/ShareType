@@ -18,9 +18,6 @@ const Document = new Schema({
         type: Array,
         default: [],
     },
-    password: {
-        type: String,
-    },
     title: {
         type: String,
         default: 'Untitled',
