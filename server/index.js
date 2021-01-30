@@ -8,7 +8,7 @@ const Document = require('./models/Document')
 const cors = require('cors')
 const session = require('express-session');
 const jwt = require('jsonwebtoken')
-const {JWT_SECRET} = require('./config/keys') 
+const { JWT_SECRET } = require('./config/keys')
 const requireLogin = require('./middleware/requireLogin')
 
 const app = express()
@@ -28,7 +28,7 @@ mongoose.connect(keys.MongoURI,
 app.use(cors())
 app.use(express.json());
 // app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.urlencoded({extended:true}))
+app.use(express.urlencoded({ extended: true }))
 
 app.use(
     session({
@@ -83,17 +83,17 @@ app.post('/register', (req, res) => {
 })
 
 app.post('/login', passport.authenticate('local'), (req, res) => {
-    const token = jwt.sign({_id:req.user._id},JWT_SECRET)
-    const {_id,username} = req.user
-    res.send({ success: true ,token,user:{_id,username}});
+    const token = jwt.sign({ _id: req.user._id }, JWT_SECRET)
+    const { _id, username } = req.user
+    res.send({ success: true, token, user: { _id, username } });
 });
-app.get('/logout',requireLogin,(req, res) => {
+app.get('/logout', requireLogin, (req, res) => {
     req.logout();
     res.json({ success: true });
 });
 
-app.post('/createDocument',requireLogin,(req,res)=>{
-    if(!req.user){
+app.post('/createDocument', requireLogin, (req, res) => {
+    if (!req.user) {
         return console.log("User Must be logged in");
     }
     const newDocument = new Document({
@@ -103,72 +103,92 @@ app.post('/createDocument',requireLogin,(req,res)=>{
         editedAt: new Date()
     })
 
-    newDocument.save((err,Doc)=>{
-        if(err){
+    newDocument.save((err, Doc) => {
+        if (err) {
             return res.json({ success: false, error: err })
         }
-        else{
+        else {
             return res.json({ success: true })
         }
     })
 })
 
-app.get('/myOwnedDocs',requireLogin,(req,res)=>{
+app.get('/myOwnedDocs', requireLogin, (req, res) => {
     if (!req.user) {
         return console.log("User Must be logged in");
     }
-
-    Document.find({ owner: req.user._id},(err,Doc)=>{
+    Document.find({owner:req.user._id}, (err, Doc) => {
         if (err) {
             return res.json({ success: false, error: err })
         }
         else {
-            return res.json({ success: true, documents: Doc})
+            return res.json({ success: true, documents: Doc })
         }
     })
 })
 
-app.get('/myCollabDocs',requireLogin,(req,res)=>{
-    Document.find((err,Doc)=>{
+app.get('/myCollabDocs', requireLogin, (req, res) => {
+    Document.find((err, Doc) => {
         if (err) {
             return res.json({ success: false, error: err })
         }
-        let docs = Doc.filter(doc=>{
-            if(doc.memberList.indexOf(req.user._id)>-1){
+        let docs = Doc.filter(doc => {
+            if (doc.memberList.indexOf(req.user._id) > -1) {
                 return true
             }
             return false
         })
-        return res.json({ success: true, documents: docs})
+        return res.json({ success: true, documents: docs })
     })
 })
 
-app.post('/collaborate',requireLogin,(req,res)=>{
-    Document.findById(req.body.id,(err,Doc)=>{
-        if(err){
+app.post('/collaborate', requireLogin, (req, res) => {
+    Document.findById(req.body.id, (err, Doc) => {
+        if (err) {
             return res.json({ success: false, error: err })
         }
         let newMemberList = [...Doc.memberList]
         newMemberList.push(req.user._id)
-        Document.findByIdAndUpdate(req.body.id,{memberList:newMemberList},(err,doc)=>{
+        Document.findByIdAndUpdate(req.body.id, { memberList: newMemberList }, (err, doc) => {
             if (err) {
                 return res.json({ success: false, error: err })
             }
-            else{
+            else {
                 return res.json({ success: true })
             }
         })
     })
 })
 
-app.post('/deleteDocument',requireLogin,(req,res)=>{
-    Document.findByIdAndDelete(req.body.id,(err,Doc)=>{
+app.post('/deleteDocument', requireLogin, (req, res) => {
+    Document.findByIdAndDelete(req.body.id, (err, Doc) => {
         if (err) {
             return res.json({ success: false, error: err })
         }
-        else{
+        else {
             return res.json({ success: true })
         }
+    })
+})
+
+app.post('/saveDocument', requireLogin, (req, res) => {
+    const newContent = { text: req.body.content, username: req.user.username }
+    Document.findById(req.body.id, (err, Doc) => {
+        if (err) {
+            return res.json({ success: false, error: err })
+        }
+        let newArray = [...Doc.content]
+        console.log("Befor-->", newArray)
+        newArray.push(newContent)
+        console.log("After--->", newArray)
+        Document.findByIdAndUpdate(req.body.id, { content: newArray }, (err, doc) => {
+            if (err) {
+                return res.json({ success: false, error: err })
+            }
+            else {
+                return res.json({ success: true })
+            }
+        })
     })
 })
 

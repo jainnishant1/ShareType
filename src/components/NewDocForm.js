@@ -41,7 +41,7 @@ const NewDocForm = (props) => {
     const createNewDoc = (e) => {
         e.preventDefault()
         // history.push('/editor')
-        props.toggle()
+        props.toggle(e)
         fetch('http://localhost:5000/createDocument', {
             method: 'POST',
             headers: {

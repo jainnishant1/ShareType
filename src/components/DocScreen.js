@@ -36,7 +36,7 @@ const useStyles = makeStyles((theme) => ({
     }
 }));
 
-export default function DocScreen() {
+export default function DocScreen(props) {
     const classes = useStyles();
     const history = useHistory();
     const [dense, setDense] = React.useState(true);
@@ -67,6 +67,7 @@ export default function DocScreen() {
     }
 
     const newDocToggler = ()=>{
+        // console.log(docs)
         setNewDoc(!newDoc)
     }
 
@@ -161,10 +162,6 @@ export default function DocScreen() {
             setError(true)
         });
     }
-    const deleteCollabDocument = (e)=>{
-        e.preventDefault()
-        console.warn("collab")
-    }
 
     const logout = (e) => {
         e.preventDefault()
@@ -193,6 +190,16 @@ export default function DocScreen() {
                 setError(true)
             });
     }
+    const editHandler = (e,id,title,content,document)=>{
+        e.preventDefault()
+        if(content.length==0){
+            props.update(id,title,null,document)
+        }
+        else{
+            props.update(id,title,content[content.length-1].text,document)
+        }
+        history.push('/editor')
+    }
 
     useEffect(() => {
         getMyOwnedDocs();
@@ -211,7 +218,9 @@ export default function DocScreen() {
             <Grid style={{ "width": "100%", "alignItems": "center" }}>
                 <Grid item xs={20} md={10}>
                     <Typography variant="h6" className={classes.title}>
-                        <b>My Documents</b> <RefreshIcon style={{"fontSize":"medium"}} onClick={getMyOwnedDocs}/>
+                        <b>My Documents</b><IconButton> 
+                            <RefreshIcon style={{ "fontSize": "large" }} onClick={getMyOwnedDocs} />
+                            </IconButton>
           </Typography>
                     <div className={classes.demo}>
                         <List dense={dense}>
@@ -236,6 +245,7 @@ export default function DocScreen() {
                                                 variant="contained"
                                                 color="primary"
                                                 style={{ "marginRight": "2px", "maxHeight": "30px", "maxWidth": "10px" }}
+                                                onClick={(e)=>{editHandler(e,doc._id,doc.title,doc.content,doc)}}
                                             >Edit</Button>
                                             <IconButton edge="end" aria-label="delete">
                                                 {doc.isOwner ? <DeleteIcon onClick={e => { deleteDocument(e,doc._id) }} /> : <DeleteIcon />}
@@ -261,7 +271,7 @@ export default function DocScreen() {
                             :
                             <div>
                             {coll ?
-                                <CollabForm toogle={(e) => { collabToggler(e) }}/>
+                                <CollabForm toggle={(e) => { collabToggler(e) }} refresh={getMyOwnedDocs}/>
                                 :
                                 <Grid container justify="flex-end">
                                 <Button

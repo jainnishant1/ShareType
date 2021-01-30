@@ -6,11 +6,20 @@ const Document = new Schema({
         type: Schema.ObjectId,
         ref: 'users',
         required: true,
+        username: {
+            type: String,
+            required:true
+        },
+        
     },
     memberList: {
         type: [{
             type: Schema.ObjectId,
             ref: 'users',
+            username: {
+                type: String,
+                required: true
+            },
         }],
         default: [],
     },

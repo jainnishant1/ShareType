@@ -33,13 +33,39 @@ const CollabForm = (props) => {
     const history = useHistory();
     const [docID, setDocID] = useState('')
     const [secondary, setSecondary] = React.useState(false);
+    const [error, setError] = useState(false)
 
     const DocIdHandler = (e) => {
         setDocID(e.target.value)
     }
     const collabDoc = (e) => {
         e.preventDefault()
-        history.push('/editor')
+        // history.push('/editor')
+        props.toggle(e)
+        fetch('http://localhost:5000/collaborate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8',
+                "Authorization": "Bearer " + localStorage.getItem("jwt")
+            },
+            credentials: 'same-origin',
+            mode: 'cors',
+            body: JSON.stringify({
+                id: docID,
+            }),
+        }).then((response) => {
+            // console.log(response)
+            return response.json();
+        }).then((resp) => {
+            if (resp.success == true) {
+                props.refresh()
+            } else {
+                setError(true)
+            }
+        }).catch((err) => {
+            console.log(`Error in collaborating: ${err}`);
+            setError(true)
+        });
     }
 
     return (
@@ -60,7 +86,7 @@ const CollabForm = (props) => {
                     type="submit"
                     variant="contained"
                     style={{ "marginRight": "8px", "maxHeight": "30px", "width": "105px", "marginTop": "14px","marginBottom":"14px" }} 
-                    onClick={(e) => { props.toogle(e) }}
+                    onClick={(e) => { props.toggle(e) }}
                 >Cancel</Button>
                 <Button
                     type="submit"
