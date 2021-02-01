@@ -43,14 +43,68 @@ app.use(passport.session());
 
 
 
-
+let membersCollaborating = []
 io.on('connection', (socket) => {
-    console.log('Connected to client!');
-    socket.on('msg', (data) => { console.log('Message obtained ', data); });
-    socket.emit('msg', { hello: 'world' });
-    socket.on('cmd', (data) => {
-        console.log(data);
-    });
+    // console.log('Connected to client!');
+    // socket.on('msg', (data) => { console.log('Message obtained ', data); });
+    // socket.emit('msg', { hello: 'world' });
+    // socket.on('cmd', (data) => {
+    //     console.log(data);
+    // });
+
+    
+    let docInactive = true
+
+    socket.on('joinSocket', (data) => {
+        // console.log('Connected to Client: ', data.user)
+
+        //Create a room for each doc:
+        socket.join(data.id)
+        docInactive = true
+
+        membersCollaborating.forEach((member) => {
+            if (member.id === data.id) {
+                docInactive = false
+                member.membersLive.push(data.user)
+            }
+        })
+        if (docInactive) {
+
+            //2 fields are created in the array to group the users opening same doc
+            membersCollaborating.push({ id: data.id, membersLive: [data.user] })
+
+        }
+
+        // const len = membersCollaborating.length - 1
+        // console.log(membersCollaborating[len])
+
+    })
+
+    socket.on("leaveSocket",(data)=>{
+        // console.log("Leaving this document", data.id)
+
+        //Leave this Joined doc for which room was created earlier
+        socket.leave(data.id)
+
+        //removing the left member from collaborator list of that doc
+        membersCollaborating.forEach((member)=>{
+            if(member.id===data.id){
+                let newArray = member.membersLive.filter(doc=>{
+                    if(doc._id!==data.user._id){
+                        return true;
+                    }
+                    return false;
+                })
+                member.membersLive = newArray
+                // console.log(member)
+            }
+        })
+    })
+
+    socket.on("edit",(data)=>{
+        //propogating changes to the doc on other users onnected to that socket
+        socket.broadcast.to(data.id).emit('edit',{content:data.content})
+    })
 });
 app.post('/register', (req, res) => {
 
@@ -117,7 +171,7 @@ app.get('/myOwnedDocs', requireLogin, (req, res) => {
     if (!req.user) {
         return console.log("User Must be logged in");
     }
-    Document.find({owner:req.user._id}, (err, Doc) => {
+    Document.find({ owner: req.user._id }, (err, Doc) => {
         if (err) {
             return res.json({ success: false, error: err })
         }
@@ -178,9 +232,9 @@ app.post('/saveDocument', requireLogin, (req, res) => {
             return res.json({ success: false, error: err })
         }
         let newArray = [...Doc.content]
-        console.log("Befor-->", newArray)
+        // console.log("Befor-->", newArray)
         newArray.push(newContent)
-        console.log("After--->", newArray)
+        // console.log("After--->", newArray)
         Document.findByIdAndUpdate(req.body.id, { content: newArray }, (err, doc) => {
             if (err) {
                 return res.json({ success: false, error: err })

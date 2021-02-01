@@ -19,6 +19,8 @@ import io from 'socket.io-client'
 import ExitToAppTwoToneIcon from '@material-ui/icons/ExitToAppTwoTone';
 import CollabList from '../CollabList'
 
+const socket = io('http://localhost:5000');
+
 const Editor = (props) => {
     const history = useHistory();
     const [error, setError] = useState(false)
@@ -29,10 +31,11 @@ const Editor = (props) => {
 
     const changeHandler = (editorContent) => {
         setEditorContent(editorContent);
+        socket.emit('edit', {id:props.document._id, content: editorContent.toString('html')})
     };
 
-    const logout = (e) => {
-        e.preventDefault()
+    const logout = () => {
+        // e.preventDefault()
         fetch('http://localhost:5000/logout', {
             headers: {
                 'Content-Type': 'application/json; charset=utf-8',
@@ -77,7 +80,7 @@ const Editor = (props) => {
                 if (resp.success == true) {
                     console.log("Document Saved")
                     if (logToggler.current)
-                        history.push('/')
+                        logout()
                     if (backToggler.current)
                         history.push('/docScreen')
                 } else {
@@ -107,24 +110,33 @@ const Editor = (props) => {
             save(e)
         }
         else {
-            history.push('/')
+            logout()
         }
     }
 
     useEffect(() => {
-        console.log(props)
+        // console.log(props)
         if (props.content) {
             setEditorContent(RichTextEditor.createValueFromString(props.content, 'html'))
         }
 
         // const socket = io('http://localhost:5000');
-        // socket.on('connect', () => { console.log('ws connect'); });
-        // socket.on('disconnect', () => { console.log('ws disconnect'); });
+        socket.on('connect', () => { console.log('ws connect'); });
+        socket.on('disconnect', () => { console.log('ws disconnect'); });
         // socket.emit('msg', 'Does this work?');
         // socket.on('msg', (data) => {
         //     console.log('ws msg:', data);
         //     socket.emit('cmd', { foo: 123 });
         // });
+        socket.emit('joinSocket',{id:props.document._id,user:JSON.parse(localStorage.getItem("user"))})
+
+        socket.on('edit',(data)=>{
+            setEditorContent(RichTextEditor.createValueFromString(data.content, 'html'))
+        })
+
+        return () =>{
+            socket.emit('leaveSocket', { id: props.document._id, user: JSON.parse(localStorage.getItem("user")) })
+        }
     }, [])
 
     return <>
