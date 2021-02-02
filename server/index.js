@@ -52,7 +52,7 @@ io.on('connection', (socket) => {
     //     console.log(data);
     // });
 
-    
+
     let docInactive = true
 
     socket.on('joinSocket', (data) => {
@@ -80,17 +80,17 @@ io.on('connection', (socket) => {
 
     })
 
-    socket.on("leaveSocket",(data)=>{
+    socket.on("leaveSocket", (data) => {
         // console.log("Leaving this document", data.id)
 
         //Leave this Joined doc for which room was created earlier
         socket.leave(data.id)
 
         //removing the left member from collaborator list of that doc
-        membersCollaborating.forEach((member)=>{
-            if(member.id===data.id){
-                let newArray = member.membersLive.filter(doc=>{
-                    if(doc._id!==data.user._id){
+        membersCollaborating.forEach((member) => {
+            if (member.id === data.id) {
+                let newArray = member.membersLive.filter(doc => {
+                    if (doc._id !== data.user._id) {
                         return true;
                     }
                     return false;
@@ -101,9 +101,20 @@ io.on('connection', (socket) => {
         })
     })
 
-    socket.on("edit",(data)=>{
+    socket.on("liveUsers", (data) => {
+        let newArray = null
+        membersCollaborating.forEach((member) => {
+            if (member.id === data.id) {
+                newArray = member.membersLive
+                console.log(newArray)
+            }
+        })
+        socket.emit("liveUsers", newArray)
+    })
+
+    socket.on("edit", (data) => {
         //propogating changes to the doc on other users onnected to that socket
-        socket.broadcast.to(data.id).emit('edit',{content:data.content})
+        socket.broadcast.to(data.id).emit('edit', { content: data.content })
     })
 });
 app.post('/register', (req, res) => {
@@ -146,12 +157,33 @@ app.get('/logout', requireLogin, (req, res) => {
     res.json({ success: true });
 });
 
+// app.post('/createDocument', requireLogin, (req, res) => {
+//     if (!req.user) {
+//         return console.log("User Must be logged in");
+//     }
+//     const newDocument = new Document({
+//         owner: req.user._id,
+//         title: req.body.title,
+//         createdAt: new Date(),
+//         editedAt: new Date()
+//     })
+
+//     newDocument.save((err, Doc) => {
+//         if (err) {
+//             return res.json({ success: false, error: err })
+//         }
+//         else {
+//             return res.json({ success: true })
+//         }
+//     })
+// })
+
 app.post('/createDocument', requireLogin, (req, res) => {
     if (!req.user) {
         return console.log("User Must be logged in");
     }
     const newDocument = new Document({
-        owner: req.user._id,
+        owner: req.user,
         title: req.body.title,
         createdAt: new Date(),
         editedAt: new Date()
@@ -167,11 +199,24 @@ app.post('/createDocument', requireLogin, (req, res) => {
     })
 })
 
+// app.get('/myOwnedDocs', requireLogin, (req, res) => {
+//     if (!req.user) {
+//         return console.log("User Must be logged in");
+//     }
+//     Document.find({ owner: req.user._id }, (err, Doc) => {
+//         if (err) {
+//             return res.json({ success: false, error: err })
+//         }
+//         else {
+//             return res.json({ success: true, documents: Doc })
+//         }
+//     })
+// })
 app.get('/myOwnedDocs', requireLogin, (req, res) => {
     if (!req.user) {
         return console.log("User Must be logged in");
     }
-    Document.find({ owner: req.user._id }, (err, Doc) => {
+    Document.find({ owner: { _id: req.user._id, username: req.user.username } }, (err, Doc) => {
         if (err) {
             return res.json({ success: false, error: err })
         }
@@ -181,16 +226,21 @@ app.get('/myOwnedDocs', requireLogin, (req, res) => {
     })
 })
 
+
 app.get('/myCollabDocs', requireLogin, (req, res) => {
+    // console.log(req.user._id)
     Document.find((err, Doc) => {
         if (err) {
             return res.json({ success: false, error: err })
         }
         let docs = Doc.filter(doc => {
-            if (doc.memberList.indexOf(req.user._id) > -1) {
-                return true
-            }
-            return false
+            let flag = false
+            doc.memberList.forEach((member) => {
+                if (member._id.toString() == req.user._id.toString()) {
+                    flag = true
+                }
+            })
+            return flag
         })
         return res.json({ success: true, documents: docs })
     })
@@ -202,7 +252,7 @@ app.post('/collaborate', requireLogin, (req, res) => {
             return res.json({ success: false, error: err })
         }
         let newMemberList = [...Doc.memberList]
-        newMemberList.push(req.user._id)
+        newMemberList.push({ _id: req.user._id, username: req.user.username, access: req.body.access })
         Document.findByIdAndUpdate(req.body.id, { memberList: newMemberList }, (err, doc) => {
             if (err) {
                 return res.json({ success: false, error: err })
@@ -211,6 +261,42 @@ app.post('/collaborate', requireLogin, (req, res) => {
                 return res.json({ success: true })
             }
         })
+    })
+})
+
+app.post('/addCollaborator', requireLogin, (req, res) => {
+    Document.findById(req.body.docId, (err, Doc) => {
+        if (err) {
+            return res.json({ success: false, error: err })
+        }
+        let newMemberList = [...Doc.memberList]
+        User.findById(req.body.id, (err, user) => {
+            if (err) {
+                return res.json({ success: false, error: err })
+            }
+            console.log("User---->", user)
+            newMemberList.push({ _id: req.body.id, username: user.username, access: req.body.access })
+            console.log("Document before--->", Doc)
+            console.log("NewMmeberList---->", newMemberList)
+            Document.findByIdAndUpdate(req.body.docId, { memberList: newMemberList }, (err, doc) => {
+                if (err) {
+                    return res.json({ success: false, error: err })
+                }
+                else {
+                    return res.json({ success: true })
+                }
+            })
+        })
+    })
+})
+
+app.post("/getList", requireLogin, (req, res) => {
+    Document.findById(req.body.docId, (err, Doc) => {
+        if (err) {
+            return res.json({ success: false, error: err })
+        }
+        let newArray = [Doc.owner, ...Doc.memberList]
+        return res.json({ success: true, members: newArray })
     })
 })
 
@@ -232,9 +318,7 @@ app.post('/saveDocument', requireLogin, (req, res) => {
             return res.json({ success: false, error: err })
         }
         let newArray = [...Doc.content]
-        // console.log("Befor-->", newArray)
         newArray.push(newContent)
-        // console.log("After--->", newArray)
         Document.findByIdAndUpdate(req.body.id, { content: newArray }, (err, doc) => {
             if (err) {
                 return res.json({ success: false, error: err })

@@ -18,11 +18,13 @@ import FormatColor from '@material-ui/icons/Palette'
 import io from 'socket.io-client'
 import ExitToAppTwoToneIcon from '@material-ui/icons/ExitToAppTwoTone';
 import CollabList from '../CollabList'
+import LiveList from '../LiveList'
 
 const socket = io('http://localhost:5000');
 
 const Editor = (props) => {
     const history = useHistory();
+    const user = JSON.parse(localStorage.getItem("user"))
     const [error, setError] = useState(false)
     const backToggler = useRef(false)
     const logToggler = useRef(false)
@@ -141,17 +143,14 @@ const Editor = (props) => {
 
     return <>
         <Grid container justify="flex-end">
-            <CollabList list={props.document}/>
+            <LiveList list={props.document}/>
+            {user._id==props.document.owner._id?
+            <CollabList list={props.document}/>:null}
             <Button
                 type="submit"
 
                 onClick={e => { back(e) }}
             >Back</Button>
-            <Button
-                type="submit"
-
-                onClick={e => { save(e) }}
-            >Save</Button>
             <Button
                 type="submit"
 

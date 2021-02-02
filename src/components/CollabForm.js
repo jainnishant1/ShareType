@@ -52,6 +52,7 @@ const CollabForm = (props) => {
             mode: 'cors',
             body: JSON.stringify({
                 id: docID,
+                access:"edit"
             }),
         }).then((response) => {
             // console.log(response)
