@@ -116,6 +116,12 @@ io.on('connection', (socket) => {
         //propogating changes to the doc on other users onnected to that socket
         socket.broadcast.to(data.id).emit('edit', { content: data.content })
     })
+
+    socket.on("updateAccess", (data) => {
+        // console.log("Hi")
+        console.log("Server side socket--->", data.members)
+        socket.broadcast.to(data.id).emit('updateAccess', { members: data.members, content: data.content })
+    })
 });
 app.post('/register', (req, res) => {
 
@@ -320,6 +326,52 @@ app.post('/saveDocument', requireLogin, (req, res) => {
         let newArray = [...Doc.content]
         newArray.push(newContent)
         Document.findByIdAndUpdate(req.body.id, { content: newArray }, (err, doc) => {
+            if (err) {
+                return res.json({ success: false, error: err })
+            }
+            else {
+                return res.json({ success: true })
+            }
+        })
+    })
+})
+
+// app.post('/updateAccess', requireLogin, (req, res) => {
+//     Document.findById(req.body.docId, (err, Doc) => {
+//         if (err) {
+//             return res.json({ success: false, error: err })
+//         }
+//         let newMemberList = [...Doc.memberList]
+//         newMemberList.forEach((member) => {
+//             if (member._id == req.body.id) {
+//                 member.access = req.body.access
+//             }
+//         })
+//         Document.findByIdAndUpdate(req.body.docId, { memberList: newMemberList }, (err, doc) => {
+//             if (err) {
+//                 return res.json({ success: false, error: err })
+//             }
+//             else {
+//                 return res.json({ success: true })
+//             }
+//         })
+//     })
+// })
+
+app.post('/updateAccess', requireLogin, (req, res) => {
+    Document.findById(req.body.docId, (err, Doc) => {
+        if (err) {
+            return res.json({ success: false, error: err })
+        }
+        let newMemberList = [...Doc.memberList]
+        let i = 0;
+        req.body.members.forEach((member, index) => {
+            if (member.accessState) {
+                newMemberList[i].access = member.accessState;
+                i = i + 1;
+            }
+        })
+        Document.findByIdAndUpdate(req.body.docId, { memberList: newMemberList }, (err, doc) => {
             if (err) {
                 return res.json({ success: false, error: err })
             }

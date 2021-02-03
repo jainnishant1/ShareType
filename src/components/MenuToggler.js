@@ -18,21 +18,7 @@ class MenuToggler extends Component {
     }
 
     handleChange(event, index, value) {
-        //set selection to the value selected
         this.setState({ selection: value });
-        // if (this.state.selection == 1) {
-        //     // return (
-        //     //     <div>Hello</div>
-        //     // );
-        //     console.log("1")
-        //     this.props.changeAccess(1)
-        // } else if (this.state.selection == 2) {
-        //     // return (
-        //     //     <div>Hola</div>
-        //     // );
-        //     console.log(2)
-        //     this.props.changeAccess(2)
-        // } 
 
     }
 
@@ -40,9 +26,11 @@ class MenuToggler extends Component {
         if (this.state.selection == 1) {
             if(this.props.changeAccess)
             this.props.changeAccess(1)
+            // console.log(1)
         } else if (this.state.selection == 2) {
             if(this.props.changeAccess)
             this.props.changeAccess(2)
+            // console.log(2)
         } 
     }
 

@@ -29,11 +29,35 @@ const Editor = (props) => {
     const backToggler = useRef(false)
     const logToggler = useRef(false)
     const [editorContent, setEditorContent] = useState(RichTextEditor.createEmptyValue());
+    // const [updateAccess,setUpdateAccess] = useState([])
+    const updateAccess = React.useRef([])
 
 
     const changeHandler = (editorContent) => {
-        setEditorContent(editorContent);
-        socket.emit('edit', {id:props.document._id, content: editorContent.toString('html')})
+        if(props.document.owner._id==user._id){
+            setEditorContent(editorContent);
+            socket.emit('edit', { id: props.document._id, content: editorContent.toString('html') })
+            return
+        }
+        else if(updateAccess.current.length>0){
+            updateAccess.current.forEach((member) => {
+                if (member._id == user._id && member.access != "view") {
+                    setEditorContent(editorContent);
+                    socket.emit('edit', { id: props.document._id, content: editorContent.toString('html') })
+                    return
+                }
+            })
+        }
+        else{
+            props.document.memberList.forEach((member) => {
+                if (member._id == user._id && member.access != "view"){
+                    setEditorContent(editorContent);
+                    socket.emit('edit', { id: props.document._id, content: editorContent.toString('html') })
+                    return
+                }
+            })
+        }
+        
     };
 
     const logout = () => {
@@ -118,9 +142,11 @@ const Editor = (props) => {
 
     useEffect(() => {
         // console.log(props)
+        // console.log(props.document)
         if (props.content) {
             setEditorContent(RichTextEditor.createValueFromString(props.content, 'html'))
         }
+        console.log(editorContent.toString('html'))
 
         // const socket = io('http://localhost:5000');
         socket.on('connect', () => { console.log('ws connect'); });
@@ -130,22 +156,30 @@ const Editor = (props) => {
         //     console.log('ws msg:', data);
         //     socket.emit('cmd', { foo: 123 });
         // });
-        socket.emit('joinSocket',{id:props.document._id,user:JSON.parse(localStorage.getItem("user"))})
+        socket.emit('joinSocket', { id: props.document._id, user: JSON.parse(localStorage.getItem("user")) })
 
-        socket.on('edit',(data)=>{
+        socket.on('edit', (data) => {
             setEditorContent(RichTextEditor.createValueFromString(data.content, 'html'))
         })
 
-        return () =>{
+        socket.on('updateAccess', (data) => {
+            // setUpdateAccess(data.members)
+            updateAccess.current = data.members
+            console.log(data.content)
+            setEditorContent(RichTextEditor.createValueFromString(data.content, 'html'))
+            // changeHandler(editorContent)
+        })
+
+        return () => {
             socket.emit('leaveSocket', { id: props.document._id, user: JSON.parse(localStorage.getItem("user")) })
         }
     }, [])
 
     return <>
         <Grid container justify="flex-end">
-            <LiveList list={props.document}/>
-            {user._id==props.document.owner._id?
-            <CollabList list={props.document}/>:null}
+            <LiveList list={props.document} />
+            {user._id == props.document.owner._id ?
+                <CollabList list={props.document} save={e=>{save(e)}}/> : null}
             <Button
                 type="submit"
 

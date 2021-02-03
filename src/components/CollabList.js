@@ -24,10 +24,12 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import TextField from '@material-ui/core/TextField';
 import DropDownMenu from 'material-ui/DropDownMenu';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
+import io from 'socket.io-client'
 import MenuToggler from './MenuToggler'
 
 
 const emails = ['username@gmail.com', 'user02@gmail.com'];
+const socket = io('http://localhost:5000');
 const useStyles = makeStyles({
     avatar: {
         backgroundColor: blue[100],
@@ -38,7 +40,7 @@ const useStyles = makeStyles({
         marginLeft: '25px',
     },
     listItem: {
-        height:"90%"
+        height: "90%"
     }
 });
 
@@ -50,6 +52,8 @@ function SimpleDialog(props) {
     const [error, setError] = useState(false)
     const userList = React.useRef([])
     const access = React.useRef("edit")
+    const [change, setChange] = useState(false)
+    let updateToggle = false
 
 
     const handleClose = () => {
@@ -72,6 +76,98 @@ function SimpleDialog(props) {
         else if (val == 1) {
             access.current = "edit"
         }
+    }
+
+    const accessHandler = (val, member) => {
+        // console.log(member)
+        if (member.accessState) {
+            if (val == 1) {
+                member.accessState = "edit"
+            }
+            if (val == 2) {
+                member.accessState = "view"
+            }
+        }
+        setChange(false)
+        userList.current.forEach((indivisual) => {
+            if (indivisual.accessState && indivisual.accessState !== indivisual.access) {
+                setChange(true)
+            }
+        })
+    }
+
+    const updateDocDetails = () => {
+
+    }
+
+    const saveAccess = (e) => {
+        e.preventDefault();
+        // // console.log(userList)
+        // if (change) {
+        //     const last = userList.current.length - 1
+        //     userList.current.forEach((member,index) => {
+        //         // console.log(member)
+        //         if (member.accessState && member.accessState != member.access) {
+        //             fetch('http://localhost:5000/updateAccess', {
+        //                 method: 'POST',
+        //                 headers: {
+        //                     'Content-Type': 'application/json; charset=utf-8',
+        //                     "Authorization": "Bearer " + localStorage.getItem("jwt")
+        //                 },
+        //                 credentials: 'same-origin',
+        //                 mode: 'cors',
+        //                 body: JSON.stringify({
+        //                     docId: props.document._id,
+        //                     id: member._id,
+        //                     access: member.accessState
+        //                 }),
+        //             }).then((resp) => {
+        //                 if (resp.json().success == true) {
+        //                     console.log(`User Permisiions successfully changed`)
+        //                     if(index==last){
+        //                         getList()
+        //                         handleClose()
+        //                         setChange(false)
+        //                     }
+        //                 } else {
+        //                     setError(true)
+        //                 }
+        //             }).catch((err) => {
+        //                 console.log(`Error in collaborating: ${err}`);
+        //                 setError(true)
+        //             });
+        //         }
+        //     })
+        // }
+        updateToggle = true
+        fetch('http://localhost:5000/updateAccess', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8',
+                "Authorization": "Bearer " + localStorage.getItem("jwt")
+            },
+            credentials: 'same-origin',
+            mode: 'cors',
+            body: JSON.stringify({
+                docId: props.document._id,
+                members: userList.current
+            }),
+        }).then((response) => {
+            return response.json();
+        }).then((resp) => {
+            if (resp.success == true) {
+                console.log(`User Permisiions successfully changed`)
+                getList()
+                handleClose()
+                setChange(false)
+            } else {
+                setError(true)
+            }
+        }).catch((err) => {
+            console.log(`Error in collaborating: ${err}`);
+            setError(true)
+        });
+
     }
 
     const addCollaborator = (e) => {
@@ -105,7 +201,7 @@ function SimpleDialog(props) {
             setError(true)
         });
     }
-    const getList=()=>{
+    const getList = () => {
         fetch('http://localhost:5000/getList', {
             method: 'POST',
             headers: {
@@ -123,6 +219,17 @@ function SimpleDialog(props) {
             if (resp.success == true) {
                 // console.log(`User successfully added as ${access.current}or`)
                 userList.current = resp.members
+                userList.current.forEach((member) => {
+                    member.accessState = member.access
+                    // if(member.access=="edit")
+                    // member.accessState = "edit";
+                    // if(member.access=="view")
+                    // member.accessState = 2;
+                })
+                if (updateToggle) {
+                    socket.emit('updateAccess', { id: props.document._id, members: userList.current, content:props.document.content[props.document.content.length-1].text })
+                }
+                // console.log(userList.current)
             } else {
                 setError(true)
             }
@@ -132,7 +239,39 @@ function SimpleDialog(props) {
         });
     }
 
+    const save = (e) => {
+        e.preventDefault()
+        fetch('http://localhost:5000/saveDocument', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8',
+                "Authorization": "Bearer " + localStorage.getItem("jwt")
+            },
+            credentials: 'same-origin',
+            mode: 'cors',
+            body: JSON.stringify({
+                id: props.id,
+                content: props.content
+            }),
+        }).then((response) => {
+            return response.json();
+        })
+            .then((resp) => {
+                if (resp.success == true) {
+                    console.log("Document Saved")
+                    saveAccess(e)
+                } else {
+                    console.log("Problem in Saving Document")
+                }
+            })
+            .catch((err) => {
+                console.log(`Error in Saving Document: ${err}`);
+                setError(true)
+            });
+    }
+
     React.useEffect(() => {
+        console.log(props.content)
         getList()
     }, [])
 
@@ -152,23 +291,32 @@ function SimpleDialog(props) {
                 <MenuToggler changeAccess={(val) => { accessToggler(val) }} />
             </Grid>
             {shareId.length == 0 ?
-                <List>
-                    {userList.current.map((email) => (
-                        <ListItem button key={email} className={classes.listItem}>
-                            {/* <ListItemAvatar>
+                <>
+                    <List>
+                        {userList.current.map((email) => (
+                            <ListItem button key={email} className={classes.listItem}>
+                                {/* <ListItemAvatar>
                             <Avatar className={classes.avatar}>
                                 <PersonIcon />
                             </Avatar>
                         </ListItemAvatar> */}
-                            <ListItemText primary={email.username} style={{ "width": "65%", "marginLeft": "10px" }} />
-                            
-                            {email._id === props.document.owner._id ?
-                                <ListItemText >Owner</ListItemText>
-                                : <ListItemText >{email.access == "edit" ? <MenuToggler val={1} /> : <MenuToggler val={2} />}</ListItemText>}
+                                <ListItemText primary={email.username} style={{ "width": "65%", "marginLeft": "10px" }} />
 
-                        </ListItem>
-                    ))}
-                </List> : <>
+                                {email._id === props.document.owner._id ?
+                                    <ListItemText >Owner</ListItemText>
+                                    : <ListItemText >{email.access == "edit" ? <MenuToggler val={1} changeAccess={(val) => { accessHandler(val, email) }} /> : <MenuToggler val={2} changeAccess={(val) => { accessHandler(val, email) }} />}</ListItemText>}
+
+                            </ListItem>
+                        ))}
+                    </List>
+                    {change ?
+                        <Button type="submit"
+                            variant="contained"
+                            style={{ "marginLeft": "80%", "marginBottom": "2%", "maxWidth": "10px" }}
+                            color="primary"
+                            onClick={e => { saveAccess(e) }}
+                        >Save</Button> : null}
+                </> : <>
                     <Button
                         type="submit"
                         variant="contained"
@@ -211,7 +359,7 @@ const CollabList = (props) => {
                 aria-haspopup="true"
                 onClick={handleClickOpen}
             >Share</Button>
-            <SimpleDialog selectedValue={selectedValue} open={open} onClose={handleClose} document={props.list} />
+            <SimpleDialog selectedValue={selectedValue} open={open} onClose={handleClose} document={props.list} save={e=>{props.save(e)}} />
         </>
     )
 }
