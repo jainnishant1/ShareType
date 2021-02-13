@@ -17,7 +17,6 @@ import RefreshIcon from '@material-ui/icons/Refresh';
 import Box from '@material-ui/core/Box';
 import TextField from '@material-ui/core/TextField';
 import io from 'socket.io-client'
-
 const socket = io('http://localhost:5000');
 
 const useStyles = makeStyles((theme) => ({
@@ -195,6 +194,7 @@ export default function DocScreen(props) {
     }
     const editHandler = (e,id,title,content,document)=>{
         e.preventDefault()
+        localStorage.setItem("document", JSON.stringify(document))
         if(content.length==0){
             props.update(id,title,null,document)
         }

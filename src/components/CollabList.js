@@ -30,6 +30,7 @@ import MenuToggler from './MenuToggler'
 
 const emails = ['username@gmail.com', 'user02@gmail.com'];
 const socket = io('http://localhost:5000');
+const currentDoc = JSON.parse(localStorage.getItem("document"))
 const useStyles = makeStyles({
     avatar: {
         backgroundColor: blue[100],
@@ -58,8 +59,8 @@ function SimpleDialog(props) {
 
 
     const handleClose = () => {
+        setShareId('')
         onClose(selectedValue);
-        // setShareId('')
     };
 
     const handleListItemClick = (value) => {
@@ -194,6 +195,8 @@ function SimpleDialog(props) {
             .then((resp) => {
                 if (resp.success == true) {
                     console.log("Document Saved")
+                    localStorage.removeItem("document")
+                    localStorage.setItem("document", JSON.stringify(resp.updated))
                     saveAccess(e)
                 } else {
                     console.log("Problem in Saving Document")
@@ -254,7 +257,6 @@ function SimpleDialog(props) {
             if (resp.success == true) {
                 // console.log(`User successfully added as ${access.current}or`)
                 userList.current = resp.members
-                console.log("hi")
                 userList.current.forEach((member) => {
                     member.accessState = member.access
                     // if(member.access=="edit")
@@ -263,7 +265,8 @@ function SimpleDialog(props) {
                     // member.accessState = 2;
                 })
                 if (updateToggle) {
-                    socket.emit('updateAccess', { id: props.document._id, members: userList.current, content: props.document.content[props.document.content.length - 1].text })
+                    const currentDoc = JSON.parse(localStorage.getItem("document"))
+                    socket.emit('updateAccess', { id: props.document._id, members: userList.current, content: currentDoc.content[currentDoc.content.length - 1].text })
                 }
                 // console.log(userList.current)
             } else {
@@ -376,6 +379,10 @@ const CollabList = (props) => {
             .then((resp) => {
                 if (resp.success == true) {
                     console.log("Document Saved")
+                    // console.log("props-->",props.content)
+                    console.log(resp.updated.content[resp.updated.content.length-1].text)
+                    localStorage.removeItem("document")
+                    localStorage.setItem("document",JSON.stringify(resp.updated))
                 } else {
                     console.log("Problem in Saving Document")
                 }

@@ -29,6 +29,7 @@ const Editor = (props) => {
     const backToggler = useRef(false)
     const logToggler = useRef(false)
     const [editorContent, setEditorContent] = useState(RichTextEditor.createEmptyValue());
+    const currentDoc = JSON.parse(localStorage.getItem("document"))
     // const [updateAccess,setUpdateAccess] = useState([])
     // const edit = useRef(editorContent)
     const updateAccess = React.useRef([])
@@ -125,6 +126,7 @@ const Editor = (props) => {
     const back = (e) => {
         e.preventDefault()
         backToggler.current = !backToggler.current
+        localStorage.removeItem("document")
         if (props.content !== editorContent.toString('html')) {
             save(e)
         }
@@ -147,20 +149,18 @@ const Editor = (props) => {
     useEffect(() => {
         // console.log(props)
         // console.log(props.document)
-        if (props.content) {
-            console.log(editorContent.toString('html'))
-            setEditorContent(RichTextEditor.createValueFromString(props.content, 'html'))
+        if(currentDoc.content[currentDoc.content.length-1].text){
+            setEditorContent(RichTextEditor.createValueFromString(currentDoc.content[currentDoc.content.length - 1].text, 'html'))
         }
+        // if (props.content) {
+        //     console.log(editorContent.toString('html'))
+        //     setEditorContent(RichTextEditor.createValueFromString(props.content, 'html'))
+        // }
         // console.log(editorContent.toString('html'))
 
         // const socket = io('http://localhost:5000');
         socket.on('connect', () => { console.log('ws connect'); });
         socket.on('disconnect', () => { console.log('ws disconnect'); });
-        // socket.emit('msg', 'Does this work?');
-        // socket.on('msg', (data) => {
-        //     console.log('ws msg:', data);
-        //     socket.emit('cmd', { foo: 123 });
-        // });
         socket.emit('joinSocket', { id: props.document._id, user: JSON.parse(localStorage.getItem("user")) })
 
         socket.on('edit', (data) => {
