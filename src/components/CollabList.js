@@ -170,6 +170,37 @@ function SimpleDialog(props) {
 
     }
 
+    const save = (e) => {
+        e.preventDefault()
+        fetch('http://localhost:5000/saveDocument', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8',
+                "Authorization": "Bearer " + localStorage.getItem("jwt")
+            },
+            credentials: 'same-origin',
+            mode: 'cors',
+            body: JSON.stringify({
+                id: props.id,
+                content: props.content
+            }),
+        }).then((response) => {
+            return response.json();
+        })
+            .then((resp) => {
+                if (resp.success == true) {
+                    console.log("Document Saved")
+                    saveAccess(e)
+                } else {
+                    console.log("Problem in Saving Document")
+                }
+            })
+            .catch((err) => {
+                console.log(`Error in Saving Document: ${err}`);
+                setError(true)
+            });
+    }
+
     const addCollaborator = (e) => {
         e.preventDefault()
         // console.log(props.document.)
@@ -227,7 +258,7 @@ function SimpleDialog(props) {
                     // member.accessState = 2;
                 })
                 if (updateToggle) {
-                    socket.emit('updateAccess', { id: props.document._id, members: userList.current, content:props.document.content[props.document.content.length-1].text })
+                    socket.emit('updateAccess', { id: props.document._id, members: userList.current, content: props.document.content[props.document.content.length - 1].text })
                 }
                 // console.log(userList.current)
             } else {
@@ -237,37 +268,6 @@ function SimpleDialog(props) {
             console.log(`Error in collaborating: ${err}`);
             setError(true)
         });
-    }
-
-    const save = (e) => {
-        e.preventDefault()
-        fetch('http://localhost:5000/saveDocument', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json; charset=utf-8',
-                "Authorization": "Bearer " + localStorage.getItem("jwt")
-            },
-            credentials: 'same-origin',
-            mode: 'cors',
-            body: JSON.stringify({
-                id: props.id,
-                content: props.content
-            }),
-        }).then((response) => {
-            return response.json();
-        })
-            .then((resp) => {
-                if (resp.success == true) {
-                    console.log("Document Saved")
-                    saveAccess(e)
-                } else {
-                    console.log("Problem in Saving Document")
-                }
-            })
-            .catch((err) => {
-                console.log(`Error in Saving Document: ${err}`);
-                setError(true)
-            });
     }
 
     React.useEffect(() => {
@@ -314,7 +314,7 @@ function SimpleDialog(props) {
                             variant="contained"
                             style={{ "marginLeft": "80%", "marginBottom": "2%", "maxWidth": "10px" }}
                             color="primary"
-                            onClick={e => { saveAccess(e) }}
+                            onClick={e => { save(e) }}
                         >Save</Button> : null}
                 </> : <>
                     <Button
@@ -359,7 +359,7 @@ const CollabList = (props) => {
                 aria-haspopup="true"
                 onClick={handleClickOpen}
             >Share</Button>
-            <SimpleDialog selectedValue={selectedValue} open={open} onClose={handleClose} document={props.list} save={e=>{props.save(e)}} />
+            <SimpleDialog selectedValue={selectedValue} open={open} onClose={handleClose} document={props.list} save={e => { props.save(e) }} id={props.id} content={props.content} />
         </>
     )
 }

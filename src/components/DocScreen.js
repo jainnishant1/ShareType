@@ -16,6 +16,9 @@ import NewDocForm from './NewDocForm'
 import RefreshIcon from '@material-ui/icons/Refresh';
 import Box from '@material-ui/core/Box';
 import TextField from '@material-ui/core/TextField';
+import io from 'socket.io-client'
+
+const socket = io('http://localhost:5000');
 
 const useStyles = makeStyles((theme) => ({
     root: {

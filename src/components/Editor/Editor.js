@@ -34,12 +34,12 @@ const Editor = (props) => {
 
 
     const changeHandler = (editorContent) => {
-        if(props.document.owner._id==user._id){
+        if (props.document.owner._id == user._id) {
             setEditorContent(editorContent);
             socket.emit('edit', { id: props.document._id, content: editorContent.toString('html') })
             return
         }
-        else if(updateAccess.current.length>0){
+        else if (updateAccess.current.length > 0) {
             updateAccess.current.forEach((member) => {
                 if (member._id == user._id && member.access != "view") {
                     setEditorContent(editorContent);
@@ -48,16 +48,16 @@ const Editor = (props) => {
                 }
             })
         }
-        else{
+        else {
             props.document.memberList.forEach((member) => {
-                if (member._id == user._id && member.access != "view"){
+                if (member._id == user._id && member.access != "view") {
                     setEditorContent(editorContent);
                     socket.emit('edit', { id: props.document._id, content: editorContent.toString('html') })
                     return
                 }
             })
         }
-        
+
     };
 
     const logout = () => {
@@ -179,7 +179,7 @@ const Editor = (props) => {
         <Grid container justify="flex-end">
             <LiveList list={props.document} />
             {user._id == props.document.owner._id ?
-                <CollabList list={props.document} save={e=>{save(e)}}/> : null}
+                <CollabList list={props.document} save={e => { save(e) }} id={props.id} content={editorContent.toString('html')} /> : null}
             <Button
                 type="submit"
 
