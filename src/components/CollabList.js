@@ -53,12 +53,13 @@ function SimpleDialog(props) {
     const userList = React.useRef([])
     const access = React.useRef("edit")
     const [change, setChange] = useState(false)
+    const changeRef = React.useRef(false)
     let updateToggle = false
 
 
     const handleClose = () => {
         onClose(selectedValue);
-        setShareId('')
+        // setShareId('')
     };
 
     const handleListItemClick = (value) => {
@@ -89,9 +90,11 @@ function SimpleDialog(props) {
             }
         }
         setChange(false)
+        // changeRef.current = false
         userList.current.forEach((indivisual) => {
             if (indivisual.accessState && indivisual.accessState !== indivisual.access) {
                 setChange(true)
+                // changeRef.current = true
             }
         })
     }
@@ -159,7 +162,8 @@ function SimpleDialog(props) {
                 console.log(`User Permisiions successfully changed`)
                 getList()
                 handleClose()
-                setChange(false)
+                // setChange(false)
+                // changeRef.current = false
             } else {
                 setError(true)
             }
@@ -250,6 +254,7 @@ function SimpleDialog(props) {
             if (resp.success == true) {
                 // console.log(`User successfully added as ${access.current}or`)
                 userList.current = resp.members
+                console.log("hi")
                 userList.current.forEach((member) => {
                     member.accessState = member.access
                     // if(member.access=="edit")
@@ -271,7 +276,8 @@ function SimpleDialog(props) {
     }
 
     React.useEffect(() => {
-        console.log(props.content)
+        // console.log(props.content)
+        // console.log("hi")
         getList()
     }, [])
 
@@ -337,6 +343,8 @@ SimpleDialog.propTypes = {
 const CollabList = (props) => {
     const [open, setOpen] = React.useState(false);
     const [selectedValue, setSelectedValue] = React.useState(emails[1]);
+    const user = JSON.parse(localStorage.getItem("user"))
+    const [error, setError] = useState(false)
 
 
     const handleClickOpen = () => {
@@ -347,6 +355,36 @@ const CollabList = (props) => {
         setOpen(false);
         setSelectedValue(value);
     };
+
+    const save = (e) => {
+        e.preventDefault()
+        fetch('http://localhost:5000/saveDocument', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8',
+                "Authorization": "Bearer " + localStorage.getItem("jwt")
+            },
+            credentials: 'same-origin',
+            mode: 'cors',
+            body: JSON.stringify({
+                id: props.id,
+                content: props.content
+            }),
+        }).then((response) => {
+            return response.json();
+        })
+            .then((resp) => {
+                if (resp.success == true) {
+                    console.log("Document Saved")
+                } else {
+                    console.log("Problem in Saving Document")
+                }
+            })
+            .catch((err) => {
+                console.log(`Error in Saving Document: ${err}`);
+                setError(true)
+            });
+    }
 
 
     return (
@@ -359,7 +397,12 @@ const CollabList = (props) => {
                 aria-haspopup="true"
                 onClick={handleClickOpen}
             >Share</Button>
-            <SimpleDialog selectedValue={selectedValue} open={open} onClose={handleClose} document={props.list} save={e => { props.save(e) }} id={props.id} content={props.content} />
+            <Button
+                type="submit"
+
+                onClick={e => { save(e) }}
+            >Save</Button>
+            <SimpleDialog selectedValue={selectedValue} open={open} onClose={handleClose} document={props.list} id={props.id} content={props.content} />
         </>
     )
 }

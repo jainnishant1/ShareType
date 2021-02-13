@@ -30,12 +30,14 @@ const Editor = (props) => {
     const logToggler = useRef(false)
     const [editorContent, setEditorContent] = useState(RichTextEditor.createEmptyValue());
     // const [updateAccess,setUpdateAccess] = useState([])
+    // const edit = useRef(editorContent)
     const updateAccess = React.useRef([])
 
 
     const changeHandler = (editorContent) => {
         if (props.document.owner._id == user._id) {
             setEditorContent(editorContent);
+            // edit.current = editorContent
             socket.emit('edit', { id: props.document._id, content: editorContent.toString('html') })
             return
         }
@@ -43,6 +45,7 @@ const Editor = (props) => {
             updateAccess.current.forEach((member) => {
                 if (member._id == user._id && member.access != "view") {
                     setEditorContent(editorContent);
+                    // edit.current = editorContent
                     socket.emit('edit', { id: props.document._id, content: editorContent.toString('html') })
                     return
                 }
@@ -52,6 +55,7 @@ const Editor = (props) => {
             props.document.memberList.forEach((member) => {
                 if (member._id == user._id && member.access != "view") {
                     setEditorContent(editorContent);
+                    // edit.current = editorContent;
                     socket.emit('edit', { id: props.document._id, content: editorContent.toString('html') })
                     return
                 }
@@ -144,9 +148,10 @@ const Editor = (props) => {
         // console.log(props)
         // console.log(props.document)
         if (props.content) {
+            console.log(editorContent.toString('html'))
             setEditorContent(RichTextEditor.createValueFromString(props.content, 'html'))
         }
-        console.log(editorContent.toString('html'))
+        // console.log(editorContent.toString('html'))
 
         // const socket = io('http://localhost:5000');
         socket.on('connect', () => { console.log('ws connect'); });
@@ -179,7 +184,7 @@ const Editor = (props) => {
         <Grid container justify="flex-end">
             <LiveList list={props.document} />
             {user._id == props.document.owner._id ?
-                <CollabList list={props.document} save={e => { save(e) }} id={props.id} content={editorContent.toString('html')} /> : null}
+                <CollabList list={props.document} id={props.id} content={editorContent.toString('html')} /> : null}
             <Button
                 type="submit"
 
