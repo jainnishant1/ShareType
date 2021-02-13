@@ -16,6 +16,7 @@ import NewDocForm from './NewDocForm'
 import RefreshIcon from '@material-ui/icons/Refresh';
 import Box from '@material-ui/core/Box';
 import TextField from '@material-ui/core/TextField';
+import ProfileDetails from './ProileDetails'
 import io from 'socket.io-client'
 const socket = io('http://localhost:5000');
 
@@ -217,6 +218,7 @@ export default function DocScreen(props) {
                     className={classes.submit}
                     onClick={e => { logout(e) }}
                 >Logout</Button>
+                <ProfileDetails className={classes.submit}/>
             </Grid>
             <Grid style={{ "width": "100%", "alignItems": "center" }}>
                 <Grid item xs={20} md={10}>

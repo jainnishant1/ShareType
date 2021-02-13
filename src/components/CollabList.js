@@ -404,11 +404,11 @@ const CollabList = (props) => {
                 aria-haspopup="true"
                 onClick={handleClickOpen}
             >Share</Button>
-            <Button
+            {/* <Button
                 type="submit"
 
                 onClick={e => { save(e) }}
-            >Save</Button>
+            >Save</Button> */}
             <SimpleDialog selectedValue={selectedValue} open={open} onClose={handleClose} document={props.list} id={props.id} content={props.content} />
         </>
     )
