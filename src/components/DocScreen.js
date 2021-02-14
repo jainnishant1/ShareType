@@ -239,12 +239,13 @@ export default function DocScreen(props) {
                                             secondary={secondary ? 'Secondary text' : null}
                                         >{doc.isOwner ? <>Owner</> : <>Collaborator</>}</ListItemText>
                                         <ListItemSecondaryAction >
+                                            {doc.isOwner ?
                                             <Button
                                                 type="submit"
                                                 variant="contained"
                                                 style={{ "marginRight": "6px", "maxHeight": "30px", "maxWidth": "10px" }}
                                                 onClick={(e) => { shareToggler(e, val) }}
-                                            >Share</Button>
+                                            >Share</Button>:null}
                                             <Button
                                                 type="submit"
                                                 variant="contained"
@@ -291,7 +292,7 @@ export default function DocScreen(props) {
                                     style={{ "marginRight": "4px", "maxHeight": "30px", "marginTop": "14px", "marginRight": "20px" }}
                                     color="primary"
                                     onClick={(e) => { collabToggler(e) }}
-                                >Collaborte</Button>
+                                >Collaborate</Button>
                             </Grid>}
                             </div>
                             }

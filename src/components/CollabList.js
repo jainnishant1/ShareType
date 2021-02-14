@@ -106,43 +106,6 @@ function SimpleDialog(props) {
 
     const saveAccess = (e) => {
         e.preventDefault();
-        // // console.log(userList)
-        // if (change) {
-        //     const last = userList.current.length - 1
-        //     userList.current.forEach((member,index) => {
-        //         // console.log(member)
-        //         if (member.accessState && member.accessState != member.access) {
-        //             fetch('http://localhost:5000/updateAccess', {
-        //                 method: 'POST',
-        //                 headers: {
-        //                     'Content-Type': 'application/json; charset=utf-8',
-        //                     "Authorization": "Bearer " + localStorage.getItem("jwt")
-        //                 },
-        //                 credentials: 'same-origin',
-        //                 mode: 'cors',
-        //                 body: JSON.stringify({
-        //                     docId: props.document._id,
-        //                     id: member._id,
-        //                     access: member.accessState
-        //                 }),
-        //             }).then((resp) => {
-        //                 if (resp.json().success == true) {
-        //                     console.log(`User Permisiions successfully changed`)
-        //                     if(index==last){
-        //                         getList()
-        //                         handleClose()
-        //                         setChange(false)
-        //                     }
-        //                 } else {
-        //                     setError(true)
-        //                 }
-        //             }).catch((err) => {
-        //                 console.log(`Error in collaborating: ${err}`);
-        //                 setError(true)
-        //             });
-        //         }
-        //     })
-        // }
         updateToggle = true
         fetch('http://localhost:5000/updateAccess', {
             method: 'POST',

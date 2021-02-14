@@ -31,7 +31,6 @@ const App = () => {
     <Route path="/docScreen">
       <DocScreen update={(id,title,content,document)=>{docHandler(id,title,content,document)}}/>
     </Route>
-    {/* <Route path="/editor" component={() => <Editor id={docId} title={docTitle} content={docContents} document={doc} />} /> */}
     <Route path="/editor">
         <Editor id={docId} title={docTitle} content={docContents} document={doc} />
     </Route>

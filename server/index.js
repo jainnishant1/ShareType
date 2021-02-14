@@ -330,15 +330,15 @@ app.post('/saveDocument', requireLogin, (req, res) => {
                 return res.json({ success: false, error: err })
             }
             else {
-                Document.findById(req.body.id,(err,updated)=>{
+                Document.findById(req.body.id, (err, updated) => {
                     if (err) {
                         return res.json({ success: false, error: err })
                     }
-                    else{
+                    else {
                         return res.json({ success: true, updated: updated })
                     }
                 })
-                
+
             }
         })
     })
