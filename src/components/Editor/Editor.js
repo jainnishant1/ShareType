@@ -16,7 +16,6 @@ import FormatTitle from '@material-ui/icons/FormatSize'
 import FormatUnderlined from '@material-ui/icons/FormatUnderlined'
 import FormatColor from '@material-ui/icons/Palette'
 import io from 'socket.io-client'
-import ExitToAppTwoToneIcon from '@material-ui/icons/ExitToAppTwoTone';
 import CollabList from '../CollabList'
 import LiveList from '../LiveList'
 

@@ -45,14 +45,7 @@ app.use(passport.session());
 
 let membersCollaborating = []
 io.on('connection', (socket) => {
-    // console.log('Connected to client!');
-    // socket.on('msg', (data) => { console.log('Message obtained ', data); });
-    // socket.emit('msg', { hello: 'world' });
-    // socket.on('cmd', (data) => {
-    //     console.log(data);
-    // });
-
-
+    
     let docInactive = true
 
     socket.on('joinSocket', (data) => {
@@ -74,9 +67,6 @@ io.on('connection', (socket) => {
             membersCollaborating.push({ id: data.id, membersLive: [data.user] })
 
         }
-
-        // const len = membersCollaborating.length - 1
-        // console.log(membersCollaborating[len])
 
     })
 
